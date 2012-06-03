@@ -3,44 +3,50 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
 		<script type='text/javascript' src='http://www.google.com/jsapi'></script>
 		<script type="text/javascript">
-			var earthQuakeData = [];
 			var EarthQuake = function(text){
-				this.text = text;
 
-				this.text = text.replace("#terremoto", "");
-				this.text = this.text.replace("Ml:", "");
-				this.text = this.text.trim();
-				this.strength = this.text[0] + "." + this.text[2];
+				this.strength = parseFloat(text.match(/Ml:[0-9]\.[0-9]/)[0].replace("Ml:",""));
+				this.dateTime = new Date(text.match(/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{1,2}:[0-9]{2}:[0-9]{2}/)[0]);
+				this.locationText = text.match(/Prov=[a-zA-Z, ]*/)[0].replace("Prov=", "");
 
-				this.message = this.text;
+				this.originalText = text;
 			};
 
 			EarthQuake.prototype.getStrength = function(){
 				return parseFloat(this.strength);
 			};
 
+			EarthQuake.prototype.getOccurrence = function(){
+				return this.dateTime;
+			};
+
+			EarthQuake.prototype.getLocationText = function(){
+				return this.locationText;
+			};
+
 			EarthQuake.prototype.toString = function(){
-				return "Earthquake with strength " + this.strength + " (" + this.text + ")";
+				return "Strength " + this.getStrength() + " at " + this.locationText;
 			};
 		</script>
 
 		<script type="text/javascript">
-			google.load('visualization', '1', {'packages':['corechart', 'annotatedtimeline']});
+			google.load('visualization', '1', {'packages':['annotatedtimeline']});
 
 			var print = function (msg){
 				$("#output").append("<div>" + msg + "</div>");
 			};
 
 			$(function(){
-				$.getJSON("https://twitter.com/statuses/user_timeline/INGVterremoti.json?callback=?&count=30",
+				var amountToFetch = 200;
+				$.getJSON("http://twitter.com/statuses/user_timeline/INGVterremoti.json?callback=?&count=" + amountToFetch,
 					function(data){
-						print("Found " + data.length + " entires");
+						var earthQuakeData = [];
 						var tmp = null;
 						for(var i=0; i < data.length; i++){
 							tmp = new EarthQuake(data[i].text);
 							earthQuakeData.push(tmp);
 
-							print(tmp.toString());
+							//print(tmp.toString());
 						}
 
 						drawEarthQuakeTimeline(earthQuakeData);
@@ -49,34 +55,33 @@
 
 			var drawEarthQuakeTimeline = function(quakeData){
 				var data = new google.visualization.DataTable();
-		    	data.addColumn('number', 'Date');
+		    	data.addColumn('datetime', 'Date');
 		     	data.addColumn('number', 'Strength');
-		        //data.addColumn('string', 'Location');
+		     	data.addColumn('string', 'title1');
+  				data.addColumn('string', 'text1');
+		        //data.addColumn({type:'string', role:'annotation'}); // annotation role col.
+				//data.addColumn({type:'string', role:'annotationText'});
 
 		        var d = [];
 		        for(var i=0; i<quakeData.length; i++){
-		        	//d.push([new Date(2008, 1 ,4), quakeData[i].getStrength(), quakeData[i].message]);
-		        	d.push([i, quakeData[i].getStrength()]);
+		        	d.push([quakeData[i].getOccurrence(), quakeData[i].getStrength(), quakeData[i].getStrength().toString(), quakeData[i].getLocationText()]);
 		        }
 
 		        data.addRows(d);
-
-		        /*
-		        data.addRows([
-		          [new Date(2008, 1 ,4), 75284, "Test"],
-		          [new Date(2008, 1 ,5), 41476, 'Bought Pens'],
-		        ]);
-				*/
-
-		        //var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('timeline'));
-		        var chart = new google.visualization.LineChart(document.getElementById('timeline'));
+		        var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('timeline'));
 		        chart.draw(data, {displayAnnotations: true});
+
+		        google.visualization.events.addListener(chart, 'select', function(e){
+		        	console.log("Selected", e);
+		        });
 			}
 		</script>
 	</head>
 	<body>
 		<h1>Terremoti</h1>
 		<div id="output"></div>
-		<div id="timeline" style="width:900px; height:440px;"/>
+		<div id="timeline" style="width:1200px; height:440px;"/>
+
+		<a href="https://twitter.com/#!/INGVterremoti">https://twitter.com/#!/INGVterremoti</a>
 	</body>
 </html>

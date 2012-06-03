@@ -1,0 +1,82 @@
+<html>
+	<head>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+		<script type='text/javascript' src='http://www.google.com/jsapi'></script>
+		<script type="text/javascript">
+			var earthQuakeData = [];
+			var EarthQuake = function(text){
+				this.text = text;
+
+				this.text = text.replace("#terremoto", "");
+				this.text = this.text.replace("Ml:", "");
+				this.text = this.text.trim();
+				this.strength = this.text[0] + "." + this.text[2];
+
+				this.message = this.text;
+			};
+
+			EarthQuake.prototype.getStrength = function(){
+				return parseFloat(this.strength);
+			};
+
+			EarthQuake.prototype.toString = function(){
+				return "Earthquake with strength " + this.strength + " (" + this.text + ")";
+			};
+		</script>
+
+		<script type="text/javascript">
+			google.load('visualization', '1', {'packages':['corechart', 'annotatedtimeline']});
+
+			var print = function (msg){
+				$("#output").append("<div>" + msg + "</div>");
+			};
+
+			$(function(){
+				$.getJSON("https://twitter.com/statuses/user_timeline/INGVterremoti.json?callback=?&count=30",
+					function(data){
+						print("Found " + data.length + " entires");
+						var tmp = null;
+						for(var i=0; i < data.length; i++){
+							tmp = new EarthQuake(data[i].text);
+							earthQuakeData.push(tmp);
+
+							print(tmp.toString());
+						}
+
+						drawEarthQuakeTimeline(earthQuakeData);
+					});
+			});
+
+			var drawEarthQuakeTimeline = function(quakeData){
+				var data = new google.visualization.DataTable();
+		    	data.addColumn('number', 'Date');
+		     	data.addColumn('number', 'Strength');
+		        //data.addColumn('string', 'Location');
+
+		        var d = [];
+		        for(var i=0; i<quakeData.length; i++){
+		        	//d.push([new Date(2008, 1 ,4), quakeData[i].getStrength(), quakeData[i].message]);
+		        	d.push([i, quakeData[i].getStrength()]);
+		        }
+
+		        data.addRows(d);
+
+		        /*
+		        data.addRows([
+		          [new Date(2008, 1 ,4), 75284, "Test"],
+		          [new Date(2008, 1 ,5), 41476, 'Bought Pens'],
+		        ]);
+				*/
+
+		        //var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('timeline'));
+		        var chart = new google.visualization.LineChart(document.getElementById('timeline'));
+		        chart.draw(data, {displayAnnotations: true});
+			}
+		</script>
+	</head>
+	<body>
+		<h1>Terremoti</h1>
+		<div id="output"></div>
+		<div id="timeline" style="width:900px; height:440px;"/>
+	</body>
+</html>

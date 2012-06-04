@@ -39,8 +39,33 @@
 				$("#output").append("<div>" + msg + "</div>");
 			};
 
+			$(document).ajaxError(function(ev, req, settings){
+				alert("error");
+			});
+
 			$(function(){
-				var amountToFetch = 200;
+				var amountToFetch = 30;
+				$.ajax({
+					url: "http://twitter.com/statuses/user_timeline/INGVterremoti.json?count=" + amountToFetch + "&callback=?",
+					type: "GET",
+					dataType: "json",
+					success:function(data){
+						var earthQuakeData = [];
+						var tmp = null;
+						for(var i=0; i < data.length; i++){
+							tmp = new EarthQuake(data[i].text);
+							earthQuakeData.push(tmp);
+
+							//print(tmp.toString());
+						}
+
+						drawEarthQuakeTimeline(earthQuakeData);
+					},
+					error: function(e){
+						console.log(e);
+					}
+				});
+				/*
 				$.getJSON("http://twitter.com/statuses/user_timeline/INGVterremoti.json?count=" + amountToFetch + "&callback=?",
 					function(data){
 						var earthQuakeData = [];
@@ -54,6 +79,7 @@
 
 						drawEarthQuakeTimeline(earthQuakeData);
 					});
+				*/
 			});
 
 			var drawEarthQuakeTimeline = function(quakeData){
@@ -105,7 +131,7 @@
       <!-- Main hero unit for a primary marketing message or call to action -->
       <div class="hero-unit">
         <h1>Visua - Terremoti</h1>
-        <p>Graphical visualizations of the last 200 earthquakes in Italy.</p>
+        <p>Graphical visualizations of the lastest earthquakes in Italy.</p>
       </div>
 
       <!-- Example row of columns -->

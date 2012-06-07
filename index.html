@@ -67,6 +67,7 @@
 					dataType: "json",
 					success:function(data){
 						var resetTime = moment(data.reset_time).fromNow();
+						var whyThisHtml = "<a href='https://dev.twitter.com/docs/rate-limiting' target='_blank'>Why this?</a>";
 						if(data.remaining_hits > 0){
 							$("#remainingHits").text(data.remaining_hits);
 							$("#totalHits").text(data.hourly_limit);
@@ -93,7 +94,10 @@
 							});
 						}else{
 							$(".js-chart-container").hide();
-							$(".js-twitter-api").html("Oops, I'm sorry but it seems as if you don't have any calls left. Your call limit will be reset " + resetTime + ".");
+							$(".js-twitter-api")
+								.html("Oops, I'm sorry but it seems as if you don't have any calls left. Your call limit will be reset " + resetTime + ".").append("")
+								.append("<br/>")
+								.append(whyThisHtml);
 						}
 						$(".js-twitter-api").show();
 					},
@@ -150,12 +154,12 @@
 	      </div>
 	      <div class="row">
 	      	<div class="span12">
-		      	<p class="lead js-twitter-api" style="display:none">
-		      		You have <span id="remainingHits"></span> calls left from a total of <span id="totalHits"></span>. Your calls will be reset <span id="resetTime"></span>.
-		      	</p>
-		      	<p class="lead">
-		      		<a href="https://dev.twitter.com/docs/rate-limiting" target="_blank">Why this?</a>
-		      	</p>
+		      	<div class="alert alert-info">
+			      	<p class="lead js-twitter-api" style="display:none">
+			      		You have <span id="remainingHits"></span> calls left from a total of <span id="totalHits"></span>. Your calls will be reset <span id="resetTime"></span>.<br/>
+			      		<a href="https://dev.twitter.com/docs/rate-limiting" target="_blank">Why this?</a>
+			      	</p>
+			    </div>
 	      	</div>
 	      </div>
 

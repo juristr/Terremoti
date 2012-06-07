@@ -4,6 +4,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link href="bootstrap/css/bootstrap.css" rel="stylesheet">
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+		<script type='text/javascript' src='scripts/moment.min.js'></script>
 		<script type='text/javascript' src='http://www.google.com/jsapi'></script>
 		<script type="text/javascript">
 			var EarthQuake = function(text){
@@ -14,7 +15,9 @@
 					//still to verify why sometimes Md arrives instead of Ml (this is a hacky fix for now)
 					this.strength = parseFloat(text.match(/Md:[0-9]\.[0-9]/)[0].replace("Md:",""));
 				}
-				this.dateTime = new Date(text.match(/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{1,2}:[0-9]{2}:[0-9]{2}/)[0]);
+				var dateString = text.match(/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{1,2}:[0-9]{2}:[0-9]{2}/)[0];
+				this.dateTime = moment.utc(dateString, "YYYY-MM-DD HH:mm:ss");
+				//this.dateTime = new Date(text.match(/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{1,2}:[0-9]{2}:[0-9]{2}/)[0]);
 				this.locationText = text.match(/Prov=[a-zA-Z, ]*/)[0].replace("Prov=", "");
 
 				this.originalText = text;
@@ -25,7 +28,7 @@
 			};
 
 			EarthQuake.prototype.getOccurrence = function(){
-				return this.dateTime;
+				return this.dateTime.toDate();
 			};
 
 			EarthQuake.prototype.getLocationText = function(){
@@ -49,7 +52,7 @@
 			});
 
 			$(function(){
-				var amountToFetch = 30;
+				var amountToFetch = 150;
 				$.ajax({
 					url: "http://twitter.com/statuses/user_timeline/INGVterremoti.json?count=" + amountToFetch + "&callback=?",
 					type: "GET",
@@ -70,21 +73,20 @@
 						console.log(e);
 					}
 				});
-				/*
-				$.getJSON("http://twitter.com/statuses/user_timeline/INGVterremoti.json?count=" + amountToFetch + "&callback=?",
-					function(data){
-						var earthQuakeData = [];
-						var tmp = null;
-						for(var i=0; i < data.length; i++){
-							tmp = new EarthQuake(data[i].text);
-							earthQuakeData.push(tmp);
 
-							//print(tmp.toString());
-						}
-
-						drawEarthQuakeTimeline(earthQuakeData);
-					});
-				*/
+				$.ajax({
+					url: "https://twitter.com/account/rate_limit_status.json?&callback=?",
+					type: "GET",
+					dataType: "json",
+					success:function(data){
+						$("#remainingHits").text(data.remaining_hits);
+						$("#totalHits").text(data.hourly_limit);
+						$("#resetTime").text(moment(data.reset_time).fromNow());
+					},
+					error: function(e){
+						console.log(e);
+					}
+				});
 			});
 
 			var drawEarthQuakeTimeline = function(quakeData){
@@ -136,7 +138,16 @@
       <!-- Main hero unit for a primary marketing message or call to action -->
       <div class="hero-unit">
         <h1>Visua - Terremoti</h1>
-        <p>Graphical visualizations of the lastest earthquakes in Italy.</p>
+        <p>
+        	Graphical visualizations of the lastest earthquakes in Italy.
+        </p>
+      </div>
+      <div class="row">
+      	<div class="span12">
+	      	<p class="lead">
+	      		You have <span id="remainingHits"></span> calls left from a total of <span id="totalHits"></span>. Your calls will be reset <span id="resetTime"></span>. <a href="https://dev.twitter.com/docs/rate-limiting" target="_blank">Why?</a>
+	      	</p>
+      	</div>
       </div>
 
       <!-- Example row of columns -->
@@ -164,7 +175,7 @@
       <hr>
 
       <footer>
-        <p style="text-align:center">&copy; <a href="http://twitter.com/juristr">@juristr</a>&nbsp;-&nbsp;Data: <a href="https://twitter.com/#!/INGVterremoti" target="window">@INGVterremoti</a></p>
+        <p style="text-align:center">by <a href="http://twitter.com/juristr">@juristr</a>&nbsp;-&nbsp;Data: <a href="https://twitter.com/#!/INGVterremoti" target="window">@INGVterremoti</a></p>
       </footer>
 
     </div>

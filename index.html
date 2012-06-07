@@ -66,7 +66,7 @@
 					type: "GET",
 					dataType: "json",
 					success:function(data){
-						var resetTime = moment(data.reset_time).fromNow();
+						var resetTime = moment.unix(data.reset_time_in_seconds).fromNow();
 						var whyThisHtml = "<a href='https://dev.twitter.com/docs/rate-limiting' target='_blank'>Why this?</a>";
 						if(data.remaining_hits > 0){
 							$("#remainingHits").text(data.remaining_hits);
